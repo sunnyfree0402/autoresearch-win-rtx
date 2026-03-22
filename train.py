@@ -1163,13 +1163,14 @@ def _run_training_once(runtime, tokenizer, config, device_batch_size, smoke_test
         else:
             mfu_text = "n/a"
         remaining = max(0, target_training_seconds - total_training_time)
-        print(
-            f"\rstep {step:05d} ({pct_done:.1f}%) | loss: {debiased_smooth_loss:.6f} | "
-            f"lrm: {lrm:.2f} | dt: {dt*1000:.0f}ms | tok/sec: {tok_per_sec:,} | "
-            f"mfu: {mfu_text} | epoch: {epoch} | remaining: {remaining:.0f}s    ",
-            end="",
-            flush=True,
-        )
+        if step % 10 == 0:
+            print(
+                f"\rstep {step:05d} ({pct_done:.1f}%) | loss: {debiased_smooth_loss:.6f} | "
+                f"lrm: {lrm:.2f} | dt: {dt*1000:.0f}ms | tok/sec: {tok_per_sec:,} | "
+                f"mfu: {mfu_text} | epoch: {epoch} | remaining: {remaining:.0f}s    ",
+                end="",
+                flush=True,
+            )
 
         if step == 0:
             gc.collect()

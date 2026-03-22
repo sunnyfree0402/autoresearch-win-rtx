@@ -99,7 +99,9 @@ LOOP FOREVER:
 4. Run the experiment: `$OutputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; uv run train.py | Out-File -Encoding utf8 run.log 2>&1`
 5. Verify the run finished: check that the last line of `run.log` contains the `---` summary. If not, the run was interrupted; wait or retry.
 6. Read out the results: `grep "^val_bpb:\|^peak_vram_mb:" run.log`
-7. If the grep output is empty, the run crashed. Run `tail -n 50 run.log` to read the Python stack trace and attempt a fix. If you can't get things to work after more than a few attempts, give up.
+7. If the grep output is empty, the run crashed or was interrupted. Check the last 50 lines: `tail -n 50 run.log`. 
+   - If it's a code error (Python traceback), fix it and move on (status: `crash`).
+   - If it says "Resource exhausted" or shows 429 errors from the environment, this is a **rate limit**. Wait 60 seconds and RETRY the experiment starting from step 4.
 8. Record the results in the tsv
 9. If val_bpb improved (lower), you "advance" the branch, keeping the git commit
 10. If val_bpb is equal or worse, you git reset back to where you started
@@ -109,6 +111,8 @@ The idea is that you are a completely autonomous researcher trying things out. I
 **Timeout**: Each experiment should take ~5 minutes total (+ a few seconds for startup and eval overhead). If a run exceeds 10 minutes, kill it and treat it as a failure (discard and revert).
 
 **Crashes**: If a run crashes (OOM, or a bug, or etc.), use your judgment: If it's something dumb and easy to fix (e.g. a typo, a missing import), fix it and re-run. If the idea itself is fundamentally broken, just skip it, log "crash" as the status in the tsv, and move on.
+
+**Rate Limits**: If you receive a "Resource exhausted" error (429) from the Gemini CLI, this is an API rate limit, not a budget issue. The [`run.log`](run.log) size has been minimized in [`train.py`](train.py) (logging every 10 steps) to save tokens. If you hit this limit, wait 60 seconds before retrying the same experiment.
 
 **NEVER STOP**: Once the experiment loop has begun (after the initial setup), do NOT pause to ask the human if you should continue. Do NOT ask "should I keep going?" or "is this a good stopping point?". The human might be asleep, or gone from a computer and expects you to continue working *indefinitely* until you are manually stopped. You are autonomous. If you run out of ideas, think harder — read papers referenced in the code, re-read the in-scope files for new angles, try combining previous near-misses, try more radical architectural changes. The loop runs until the human interrupts you, period.
 

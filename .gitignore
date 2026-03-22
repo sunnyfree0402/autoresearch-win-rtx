@@ -1,3 +1,6 @@
+# Trained model
+*.pt
+
 # Python-generated files
 __pycache__/
 *.py[oc]
